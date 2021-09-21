@@ -1,16 +1,18 @@
 import pika
 import uuid
+import time
 
 
 class RpcClient(object):
     response = None
     corr_id = None
 
-    def __init__(self, queue_name='rpc_queue', host='localhost'):
+    def __init__(self, queue_name='rpc_queue', host='localhost', timeout=120):
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host))
 
         self.channel = self.connection.channel()
         self.queue_name = queue_name
+        self.timeout = timeout
 
         result = self.channel.queue_declare(queue='', exclusive=True)
         self.callback_queue = result.method.queue
@@ -33,8 +35,12 @@ class RpcClient(object):
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id,
+                delivery_mode=2,  # make message persistent
             ),
             body=data)
+        start_time = time.time()
         while self.response is None:
             self.connection.process_data_events()
+            if (time.time() - start_time) > self.timeout:
+                return None
         return self.response
