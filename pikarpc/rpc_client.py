@@ -6,10 +6,11 @@ class RpcClient(object):
     response = None
     corr_id = None
 
-    def __init__(self):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    def __init__(self, queue_name='rpc_queue', host='localhost'):
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host))
 
         self.channel = self.connection.channel()
+        self.queue_name = queue_name
 
         result = self.channel.queue_declare(queue='', exclusive=True)
         self.callback_queue = result.method.queue
@@ -28,7 +29,7 @@ class RpcClient(object):
         self.corr_id = str(uuid.uuid4())
         self.channel.basic_publish(
             exchange='',
-            routing_key='rpc_queue',
+            routing_key=self.queue_name,
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id,
