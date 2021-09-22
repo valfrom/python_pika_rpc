@@ -7,12 +7,13 @@ class RpcClient(object):
     response = None
     corr_id = None
 
-    def __init__(self, queue_name='rpc_queue', host='localhost', timeout=120):
+    def __init__(self, queue_name='rpc_queue', host='localhost', timeout=120, persistent=False):
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host))
 
         self.channel = self.connection.channel()
         self.queue_name = queue_name
         self.timeout = timeout
+        self.persistent = persistent
 
         result = self.channel.queue_declare(queue='', exclusive=True)
         self.callback_queue = result.method.queue
@@ -35,7 +36,7 @@ class RpcClient(object):
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id,
-                delivery_mode=2,  # make message persistent
+                delivery_mode=(2 if self.persistent else None),  # make message persistent if needed
             ),
             body=data)
         start_time = time.time()
