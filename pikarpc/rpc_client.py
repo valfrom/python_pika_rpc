@@ -1,47 +1,24 @@
-import pika
+import requests
 import uuid
-import time
 
 
 class RpcClient(object):
-    response = None
-    corr_id = None
 
-    def __init__(self, queue_name='rpc_queue', host='localhost', timeout=120, persistent=False):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host))
-
-        self.channel = self.connection.channel()
+    def __init__(self, queue_name='rpc_queue', host='localhost', port=8001, timeout=120):
         self.queue_name = queue_name
         self.timeout = timeout
-        self.persistent = persistent
-
-        result = self.channel.queue_declare(queue='', exclusive=True)
-        self.callback_queue = result.method.queue
-
-        self.channel.basic_consume(
-            queue=self.callback_queue,
-            on_message_callback=self.on_response,
-            auto_ack=True)
-
-    def on_response(self, ch, method, props, body):
-        if self.corr_id == props.correlation_id:
-            self.response = body.decode("utf-8")
+        self.host = host
+        self.port = port
 
     def call(self, data: str):
-        self.response = None
-        self.corr_id = str(uuid.uuid4())
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=self.queue_name,
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id,
-                delivery_mode=(2 if self.persistent else None),  # make message persistent if needed
-            ),
-            body=data)
-        start_time = time.time()
-        while self.response is None:
-            self.connection.process_data_events()
-            if (time.time() - start_time) > self.timeout:
-                return None
-        return self.response
+        url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
+        r = requests.post(url, json={'id': str(uuid.uuid4()), 'data': data})
+        print('Response: ' + str(r))
+        print('URL: ' + url)
+        result = r.json()['result']
+        return result
+
+    def send(self, data: str):
+        url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
+        requests.post(url, json={'id': str(uuid.uuid4()), 'data': data})
+

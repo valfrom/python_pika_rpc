@@ -1,26 +1,26 @@
-import pika
+import requests
 
 
 class RpcServer:
-    def __init__(self, queue_name='rpc_queue', host='localhost'):
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host))
-        self.channel = connection.channel()
-        self.channel.queue_declare(queue=queue_name)
+    def __init__(self, queue_name='rpc_queue', host='localhost', port=8001):
+        self.queue_name = queue_name
+        self.host = host
+        self.port = port
 
-        def on_request(ch, method, props, body):
-            response = self.process(body.decode("utf-8"))
-
-            ch.basic_publish(exchange='',
-                             routing_key=props.reply_to,
-                             properties=pika.BasicProperties(correlation_id = props.correlation_id),
-                             body=str(response))
-            ch.basic_ack(delivery_tag=method.delivery_tag)
-
-        self.channel.basic_qos(prefetch_count=1)
-        self.channel.basic_consume(queue=queue_name, on_message_callback=on_request)
+    def wait(self):
+        url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
+        requests.post(url, headers={'type': 'get'}).json()
 
     def start(self):
-        self.channel.start_consuming()
+        url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
+        while True:
+            req = requests.post(url, headers={'type': 'get'}).json()
+            result = self.process(req['data'])
+            response = {
+                'id': req['id'],
+                'result': result
+            }
+            requests.post('http://{0}:{1}/'.format(self.host, self.port), json=response, headers={'type': 'result'})
 
     def process(self, data):
         return data
