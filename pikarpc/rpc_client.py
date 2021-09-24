@@ -20,5 +20,5 @@ class RpcClient(object):
 
     def send(self, data: str):
         url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
-        requests.post(url, json={'id': str(uuid.uuid4()), 'data': data})
+        requests.post(url, json={'id': str(uuid.uuid4()), 'data': data}, headers={'type': 'async'})
 

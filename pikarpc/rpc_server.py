@@ -9,7 +9,7 @@ class RpcServer:
 
     def wait(self):
         url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
-        requests.post(url, headers={'type': 'get'}).json()
+        requests.post(url, headers={'type': 'get'})
 
     def start(self):
         url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
