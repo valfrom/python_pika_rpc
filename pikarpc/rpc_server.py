@@ -14,13 +14,9 @@ class RpcServer:
     def start(self):
         url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
         while True:
-            req = requests.post(url, headers={'type': 'get'}).json()
-            result = self.process(req['data'])
-            response = {
-                'id': req['id'],
-                'result': result
-            }
-            requests.post('http://{0}:{1}/'.format(self.host, self.port), json=response, headers={'type': 'result'})
+            req = requests.post(url, headers={'type': 'get'})
+            result = self.process(req.content)
+            requests.post('http://{0}:{1}/'.format(self.host, self.port), data=result, headers={'id': req.headers['id'], 'type': 'result'})
 
     def process(self, data):
         return data

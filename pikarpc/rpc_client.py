@@ -10,15 +10,14 @@ class RpcClient(object):
         self.host = host
         self.port = port
 
-    def call(self, data: str):
+    def call(self, data):
         url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
-        r = requests.post(url, json={'id': str(uuid.uuid4()), 'data': data})
+        r = requests.post(url, data=data, headers={'id': str(uuid.uuid4())})
         print('Response: ' + str(r))
         print('URL: ' + url)
-        result = r.json()['result']
-        return result
+        return r.content
 
-    def send(self, data: str):
+    def send(self, data):
         url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
-        requests.post(url, json={'id': str(uuid.uuid4()), 'data': data}, headers={'type': 'async'})
+        requests.post(url, data=data, headers={'id': str(uuid.uuid4()),'type': 'async'})
 
