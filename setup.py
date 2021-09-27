@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pika_rpc',
-    version='0.5',
+    version='0.1.7',
     packages=find_packages(exclude=['tests*']),
     license='MIT',
     description='Pika RPC python package',
