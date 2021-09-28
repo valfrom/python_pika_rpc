@@ -30,6 +30,27 @@ class Test(unittest.TestCase):
 
         self.assertDictEqual(d, d2)
 
+    def test_chunked_str(self):
+        s = "1234567890-="
+        bts = chunked_bytes_from_object(s)
+
+        s2 = chunked_object_from_bytes(bts)
+        self.assertEqual(s, s2)
+
+    def test_chunked_bytes(self):
+        b = b"1234567890-="
+        bts = chunked_bytes_from_object(b)
+
+        b2 = chunked_object_from_bytes(bts)
+        self.assertEqual(b, b2)
+
+    def test_chunked_int(self):
+        i = 1234567890
+        bts = chunked_bytes_from_object(i)
+
+        i2 = chunked_object_from_bytes(bts)
+        self.assertEqual(i, i2)
+
     def test_chunked_float(self):
         d = {"k1": 123.00012, "k2": 17.00019}
 

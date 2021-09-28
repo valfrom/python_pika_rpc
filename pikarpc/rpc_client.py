@@ -1,5 +1,6 @@
 import requests
 import uuid
+from .chunked_utils import chunked_object_from_bytes
 
 
 class RpcClient(object):
@@ -13,9 +14,7 @@ class RpcClient(object):
     def call(self, data):
         url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
         r = requests.post(url, data=data, headers={'id': str(uuid.uuid4())})
-        print('Response: ' + str(r))
-        print('URL: ' + url)
-        return r.content
+        return chunked_object_from_bytes(r.content)
 
     def send(self, data):
         url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)

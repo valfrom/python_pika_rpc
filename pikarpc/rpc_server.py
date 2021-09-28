@@ -1,4 +1,5 @@
 import requests
+from .chunked_utils import chunked_bytes_from_object, chunked_object_from_bytes
 
 
 class RpcServer:
@@ -15,7 +16,7 @@ class RpcServer:
         url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
         while True:
             req = requests.post(url, headers={'type': 'get'})
-            result = self.process(req.content)
+            result = chunked_bytes_from_object(self.process(chunked_object_from_bytes(req.content)))
             requests.post('http://{0}:{1}/'.format(self.host, self.port), data=result, headers={'id': req.headers['id'], 'type': 'result'})
 
     def process(self, data):

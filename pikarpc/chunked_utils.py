@@ -67,8 +67,14 @@ def chunked_bytes_from_object(o, lossless=False):
     elif type(o) == list:
         result += b'l'
         result += chunked_bytes_from_list(o, lossless)
+    else:
+        bts = bytes_from_value(o, lossless)
+        result += bts[0:1]
+        result += int_to_bytes(len(bts) - 1)
+        result += bts
 
     return result
+
 
 
 def chunked_bytes_from_list(arr, lossless):
@@ -103,7 +109,7 @@ def chunked_object_from_bytes(b):
     elif t == b'l':
         return chunked_list_from_bytes(b[1:])
 
-    return None
+    return value_from_bytes(b[1:], 0)[1]
 
 
 def chunked_list_from_bytes(b):
