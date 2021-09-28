@@ -1,6 +1,6 @@
 import requests
 import uuid
-from .chunked_utils import chunked_object_from_bytes
+from .chunked_utils import chunked_object_from_bytes, chunked_bytes_from_object
 
 
 class RpcClient(object):
@@ -13,10 +13,10 @@ class RpcClient(object):
 
     def call(self, data):
         url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
-        r = requests.post(url, data=data, headers={'id': str(uuid.uuid4())})
+        r = requests.post(url, data=chunked_bytes_from_object(data), headers={'id': str(uuid.uuid4())})
         return chunked_object_from_bytes(r.content)
 
     def send(self, data):
         url = 'http://{0}:{1}/rpc/{2}'.format(self.host, self.port, self.queue_name)
-        requests.post(url, data=data, headers={'id': str(uuid.uuid4()),'type': 'async'})
+        requests.post(url, data=chunked_bytes_from_object(data), headers={'id': str(uuid.uuid4()),'type': 'async'})
 
